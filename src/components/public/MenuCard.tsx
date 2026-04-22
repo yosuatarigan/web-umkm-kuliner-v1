@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
+import { useState } from "react";
 import type { Menu } from "@/types";
 import { useCart } from "@/hooks/useCart";
+import { useToast } from "@/components/ui/Toast";
 
 interface Props {
   menu: Menu;
@@ -12,12 +14,22 @@ interface Props {
 
 export default function MenuCard({ menu }: Props) {
   const { addItem } = useCart();
+  const { showToast } = useToast();
+  const [added, setAdded] = useState(false);
 
   const formatted = new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
   }).format(menu.price);
+
+  const handleAdd = () => {
+    if (!menu.isAvailable || added) return;
+    addItem(menu);
+    showToast("Ditambahkan ke keranjang!", menu.name);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1500);
+  };
 
   return (
     <div className="group relative rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -63,11 +75,19 @@ export default function MenuCard({ menu }: Props) {
             <p className="text-lg font-bold text-gray-900">{formatted}</p>
           </div>
           <button
-            onClick={() => menu.isAvailable && addItem(menu)}
+            onClick={handleAdd}
             disabled={!menu.isAvailable}
-            className="flex items-center gap-1.5 rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm shadow-orange-200"
+            className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200 shadow-sm ${
+              added
+                ? "bg-green-500 scale-95"
+                : "bg-orange-500 hover:bg-orange-600 shadow-orange-200"
+            } disabled:opacity-40 disabled:cursor-not-allowed`}
           >
-            <Plus className="h-4 w-4" /> Pesan
+            {added ? (
+              <><Check className="h-4 w-4" /> Ditambahkan</>
+            ) : (
+              <><Plus className="h-4 w-4" /> Pesan</>
+            )}
           </button>
         </div>
       </div>
